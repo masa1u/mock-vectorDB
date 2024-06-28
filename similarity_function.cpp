@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 bool vectorSize(const std::vector<double> &v1, const std::vector<double> &v2)
 {
@@ -58,5 +59,22 @@ double cosineSimilarity(const std::vector<double> &v1, const std::vector<double>
     return 0; // ノルムが0の場合はエラーとして0を返す
   }
 
-  return dot / denominator; // コサイン類似度を計算して返す
+  return dot / denominator;
+}
+
+template <typename T>
+size_t hammingDistance(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+  if (!vectorSize(v1, v2))
+    return 0;
+
+  size_t distance = 0;
+  for (size_t i = 0; i < v1.size(); ++i)
+  {
+    if (v1[i] != v2[i])
+    {
+      ++distance;
+    }
+  }
+  return distance;
 }
