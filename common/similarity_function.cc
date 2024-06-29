@@ -2,6 +2,8 @@
 #include <vector>
 #include <cmath>
 
+#include "similarity_function.hh"
+
 bool vectorSize(const std::vector<double> &v1, const std::vector<double> &v2)
 {
   if (v1.size() != v2.size())
@@ -62,8 +64,7 @@ double cosineSimilarity(const std::vector<double> &v1, const std::vector<double>
   return dot / denominator;
 }
 
-template <typename T>
-size_t hammingDistance(const std::vector<T> &v1, const std::vector<T> &v2)
+int hammingDistance(const std::vector<double> &v1, const std::vector<double> &v2)
 {
   if (!vectorSize(v1, v2))
     return 0;
