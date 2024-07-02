@@ -1,10 +1,14 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
+#include <random>
+#include <ctime>
 
 class Vector
 {
 public:
+  Vector() = default; // デフォルトコンストラクタ
   std::vector<double> features;
 
   Vector(const std::vector<double> &features) : features(features) {}

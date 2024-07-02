@@ -1,8 +1,3 @@
-#include <iostream>
-#include <vector>
-#include <random>
-#include <ctime>
-
 #include "dataset.hh"
 
 Vector *createRandomVector(int dimension)

@@ -17,6 +17,8 @@ add_executable(main main.cc)
 
 # サブディレクトリの追加
 add_subdirectory(common)
+add_subdirectory(index)
 
 # main と common ライブラリのリンク
 target_link_libraries(main PUBLIC common)
+target_link_libraries(main PUBLIC index)
