@@ -8,7 +8,7 @@ double (*similarity_function)(const std::vector<double> &, const std::vector<dou
 
 void functionSet()
 {
-  similarity_function = dotProduct;
+  similarity_function = euclideanDistance;
 }
 
 bool vectorSize(const std::vector<double> &v1, const std::vector<double> &v2)
@@ -85,4 +85,18 @@ double hammingDistance(const std::vector<double> &v1, const std::vector<double> 
     }
   }
   return distance;
+}
+
+double euclideanDistance(const std::vector<double> &v1, const std::vector<double> &v2)
+{
+  if (!vectorSize(v1, v2))
+    return 0;
+
+  double sum = 0;
+  for (size_t i = 0; i < v1.size(); ++i)
+  {
+    sum += std::pow(v1[i] - v2[i], 2);
+  }
+
+  return std::sqrt(sum);
 }
