@@ -8,9 +8,7 @@
 #include <cfloat>
 
 #include "../common/dataset.hh"
-
-// // データポイントを表す型定義
-// using DataPoint = std::vector<double>;
+#include "../common/similarity_function.hh"
 
 // IVF-FLATインデックスクラス
 class IVFFlatIndex
@@ -18,7 +16,7 @@ class IVFFlatIndex
 public:
   IVFFlatIndex(int num_clusters, int dimension);
   void buildIndex(const std::vector<Vector *> data);
-  std::vector<std::vector<double>> search(const Vector &query, int top_k);
+  std::vector<int> search(const Vector &query, int top_k);
 
 private:
   int num_clusters;

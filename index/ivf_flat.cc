@@ -1,6 +1,4 @@
 #include "ivf_flat.hh"
-#include "../common/similarity_function.hh"
-#include "../common/dataset.hh"
 
 // コンストラクタ
 IVFFlatIndex::IVFFlatIndex(int num_clusters, int dimension)
@@ -17,7 +15,7 @@ void IVFFlatIndex::buildIndex(const std::vector<Vector *> data)
   for (const auto &point : data)
   {
     int cluster_id = closestCentroid(point->features);
-    clusters[cluster_id].push_back(point->features);
+    clusters[cluster_id].push_back(*point);
   }
 }
 
@@ -42,7 +40,7 @@ void IVFFlatIndex::kmeans(const std::vector<Vector *> data)
     for (const auto &point : data)
     {
       int cluster_id = closestCentroid(point->features);
-      new_clusters[cluster_id].push_back(point->features);
+      new_clusters[cluster_id].push_back(*point);
     }
 
     // 新しいクラスタ中心を計算
@@ -91,25 +89,26 @@ int IVFFlatIndex::closestCentroid(const Vector &point)
   return closest;
 }
 
-std::vector<std::vector<double>> IVFFlatIndex::search(const Vector &query, int top_k)
+std::vector<int> IVFFlatIndex::search(const Vector &query, int top_k)
 {
   // クエリに最も近いクラスタ中心を見つける
   int cluster_id = closestCentroid(query);
 
   // クラスタ内の全データポイントに対して距離を計算
-  std::vector<std::pair<double, std::vector<double>>> distances;
+  std::vector<std::pair<int, double>> distances;
   for (int i = 0; i < clusters[cluster_id].size(); ++i)
   {
     double dist = similarity_function(query.features, clusters[cluster_id][i].features);
-    distances.emplace_back(dist, clusters[cluster_id][i].features);
+    distances.emplace_back(clusters[cluster_id][i].id, dist);
   }
 
   // 距離でソートして上位top_kを返す
-  std::sort(distances.begin(), distances.end());
-  std::vector<std::vector<double>> result;
+  std::sort(distances.begin(), distances.end(), [](const std::pair<int, double> &a, const std::pair<int, double> &b)
+            { return a.second < b.second; });
+  std::vector<int> result;
   for (int i = 0; i < std::min(top_k, static_cast<int>(distances.size())); ++i)
   {
-    result.push_back(distances[i].second);
+    result.push_back(distances[i].first);
   }
   return result;
 }
