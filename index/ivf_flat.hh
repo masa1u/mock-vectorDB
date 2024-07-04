@@ -16,7 +16,7 @@ class IVFFlatIndex
 public:
   IVFFlatIndex(int num_clusters, int dimension);
   void buildIndex(const std::vector<Vector *> data);
-  std::vector<int> search(const Vector &query, int top_k);
+  std::vector<int> search(const Vector &query, int top_k, int n_probe);
 
 private:
   int num_clusters;
@@ -25,5 +25,5 @@ private:
   std::vector<std::vector<Vector>> clusters;
 
   void kmeans(const std::vector<Vector *> data);
-  int closestCentroid(const Vector &point);
+  int nthClosestCentroid(const Vector &point, int n);
 };

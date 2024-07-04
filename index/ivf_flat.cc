@@ -14,7 +14,7 @@ void IVFFlatIndex::buildIndex(const std::vector<Vector *> data)
   clusters.resize(num_clusters);
   for (const auto &point : data)
   {
-    int cluster_id = closestCentroid(point->features);
+    int cluster_id = nthClosestCentroid(point->features, 1);
     clusters[cluster_id].push_back(*point);
   }
 }
@@ -39,7 +39,7 @@ void IVFFlatIndex::kmeans(const std::vector<Vector *> data)
     std::vector<std::vector<Vector>> new_clusters(num_clusters);
     for (const auto &point : data)
     {
-      int cluster_id = closestCentroid(point->features);
+      int cluster_id = nthClosestCentroid(point->features, 1);
       new_clusters[cluster_id].push_back(*point);
     }
 
@@ -73,33 +73,37 @@ void IVFFlatIndex::kmeans(const std::vector<Vector *> data)
   } while (changed);
 }
 
-int IVFFlatIndex::closestCentroid(const Vector &point)
+int IVFFlatIndex::nthClosestCentroid(const Vector &point, int n)
 {
-  int closest = -1;
-  double min_dist = std::numeric_limits<double>::max();
+  std::vector<std::pair<double, int>> distances;
   for (int i = 0; i < num_clusters; ++i)
   {
     double dist = similarity_function(point.features, centroids[i].features);
-    if (dist < min_dist)
-    {
-      min_dist = dist;
-      closest = i;
-    }
+    distances.emplace_back(dist, i);
   }
-  return closest;
+  std::sort(distances.begin(), distances.end());
+
+  // nがクラスタの数より大きい場合や負の値の場合はエラー値を返す
+  if (n < 1 || n > num_clusters)
+    return -1;
+
+  // 0-indexedなので、n-1番目の要素を返す
+  return distances[n - 1].second;
 }
 
-std::vector<int> IVFFlatIndex::search(const Vector &query, int top_k)
+std::vector<int> IVFFlatIndex::search(const Vector &query, int top_k, int n_probe)
 {
-  // クエリに最も近いクラスタ中心を見つける
-  int cluster_id = closestCentroid(query);
-
-  // クラスタ内の全データポイントに対して距離を計算
   std::vector<std::pair<int, double>> distances;
-  for (int i = 0; i < clusters[cluster_id].size(); ++i)
+  for (int i = 0; i < n_probe; ++i)
   {
-    double dist = similarity_function(query.features, clusters[cluster_id][i].features);
-    distances.emplace_back(clusters[cluster_id][i].id, dist);
+    int cluster_id = nthClosestCentroid(query, i + 1);
+
+    // クラスタ内の全データポイントに対して距離を計算
+    for (int j = 0; j < clusters[cluster_id].size(); ++j)
+    {
+      double dist = similarity_function(query.features, clusters[cluster_id][j].features);
+      distances.emplace_back(clusters[cluster_id][j].id, dist);
+    }
   }
 
   // 距離でソートして上位top_kを返す
