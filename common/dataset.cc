@@ -28,6 +28,7 @@ std::vector<Vector *> generateRandomVectors(int dimension, int num_vectors)
   for (int i = 0; i < num_vectors; ++i)
   {
     Vector *vec = createRandomVector(dimension);
+    vec->id = i;
     dataset.push_back(vec);
   }
 

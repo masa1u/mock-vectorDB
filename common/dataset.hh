@@ -9,6 +9,7 @@ class Vector
 {
 public:
   Vector() = default; // デフォルトコンストラクタ
+  int id;
   std::vector<double> features;
 
   Vector(const std::vector<double> &features) : features(features) {}
