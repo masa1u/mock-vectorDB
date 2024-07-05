@@ -1,0 +1,165 @@
+#include "ivf_fc_flat.hh"
+
+FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness)
+    : num_clusters(num_clusters), dimension(dimension), fuzziness(fuzziness) {}
+
+void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
+{
+  // 初期化
+  centroids.resize(num_clusters);
+  membership.resize(data.size(), std::vector<double>(num_clusters, 0.0));
+
+  // 初期クラスタ中心をランダムに選択
+  std::random_device rd;
+  std::mt19937 gen(rd());
+
+  for (int i = 0; i < num_clusters; ++i)
+  {
+    centroids[i] = *data[std::uniform_int_distribution<>(0, data.size() - 1)(gen)];
+  }
+
+  // membershipを乱数で初期化し、合計が1になるように正規化
+  for (auto &member : membership)
+  {
+    double sum = 0.0;
+    for (double &value : member)
+    {
+      value = std::uniform_real_distribution<>(0.0, 1.0)(gen);
+      sum += value;
+    }
+    for (double &value : member)
+    {
+      value /= sum; // 合計が1になるように正規化
+    }
+  }
+
+  bool changed;
+  do
+  {
+    // クラスタ中心の計算
+    calculateCentroids(data);
+
+    // 所属度の計算
+    std::vector<std::vector<double>> old_membership = membership;
+    calculateMembership(data);
+
+    // 所属度の変化をチェック
+    changed = false;
+    for (int i = 0; i < data.size(); ++i)
+    {
+      for (int j = 0; j < num_clusters; ++j)
+      {
+        if (fabs(membership[i][j] - old_membership[i][j]) > 1e-4)
+        {
+          changed = true;
+          break;
+        }
+      }
+      if (changed)
+        break;
+    }
+  } while (changed);
+
+  // 所属度が0より大きいクラスタにベクトルを格納
+  clusters.resize(num_clusters);
+  for (int i = 0; i < data.size(); ++i)
+  {
+    for (int j = 0; j < num_clusters; ++j)
+    {
+      if (membership[i][j] > 0)
+      {
+        clusters[j].push_back(*data[i]);
+      }
+    }
+  }
+}
+
+std::vector<int> FuzzyCMeansIndex::search(const Vector &query, int top_k, int n_probe)
+{
+  std::vector<std::pair<int, double>> distances;
+  for (int i = 0; i < n_probe; ++i)
+  {
+    int cluster_id = nthClosestCentroid(query, i + 1);
+
+    for (int j = 0; j < clusters[cluster_id].size(); ++j)
+    {
+      double dist = similarity_function(query.features, clusters[cluster_id][j].features);
+      distances.emplace_back(clusters[cluster_id][j].id, dist);
+    }
+  }
+
+  std::sort(distances.begin(), distances.end(), [](const std::pair<int, double> &a, const std::pair<int, double> &b)
+            { return a.second < b.second; });
+
+  std::set<int> uniqueIds;
+  std::vector<int> result;
+  for (int i = 0; i < distances.size() && uniqueIds.size() < top_k; ++i)
+  {
+    // 重複をチェックし、重複がなければ結果に追加
+    if (uniqueIds.insert(distances[i].first).second)
+    {
+      result.push_back(distances[i].first);
+    }
+  }
+  return result;
+}
+
+void FuzzyCMeansIndex::calculateCentroids(const std::vector<Vector *> &data)
+{
+  for (int j = 0; j < num_clusters; ++j)
+  {
+    Vector new_centroid(std::vector<double>(dimension, 0.0));
+    double total_weight = 0.0;
+    for (int i = 0; i < data.size(); ++i)
+    {
+      double weight = pow(membership[i][j], fuzziness);
+      for (int k = 0; k < dimension; ++k)
+      {
+        new_centroid.features[k] += data[i]->features[k] * weight;
+      }
+      total_weight += weight;
+    }
+    for (int k = 0; k < dimension; ++k)
+    {
+      new_centroid.features[k] /= total_weight;
+    }
+    centroids[j] = new_centroid;
+  }
+}
+
+void FuzzyCMeansIndex::calculateMembership(const std::vector<Vector *> &data)
+{
+  for (int i = 0; i < data.size(); ++i)
+  {
+    double sum = 0.0;
+    for (int j = 0; j < num_clusters; ++j)
+    {
+      double distance = similarity_function(data[i]->features, centroids[j].features);
+      membership[i][j] = pow(1.0 / distance, 2.0 / (fuzziness - 1.0));
+      sum += membership[i][j];
+    }
+    // 正規化
+    for (int j = 0; j < num_clusters; ++j)
+    {
+      membership[i][j] /= sum;
+    }
+  }
+}
+
+int FuzzyCMeansIndex::nthClosestCentroid(const Vector &point, int n)
+{
+  std::vector<std::pair<double, int>> distances;
+  for (int i = 0; i < num_clusters; ++i)
+  {
+    double dist = similarity_function(point.features, centroids[i].features);
+    distances.emplace_back(dist, i);
+  }
+  std::sort(distances.begin(), distances.end());
+
+  // nがクラスタの数より大きい場合や負の値の場合はエラー値を返す
+  if (n < 1 || n > num_clusters)
+    return -1;
+
+  // 0-indexedなので、n-1番目の要素を返す
+  return distances[n - 1].second;
+}

@@ -2,6 +2,7 @@
 add_library(index
     ivf_flat.cc
     flat.cc
+    ivf_fc_flat.cc
 )
 
 # インクルードディレクトリの設定
