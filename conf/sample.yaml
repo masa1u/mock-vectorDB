@@ -1,0 +1,12 @@
+config:
+  dimension: 100
+  num_vectors: 1000
+  top_k: 10
+  num_threads: 4
+  ivf_flat:
+    nlist: 100
+    nprobe: 10
+  ivf_fc_flat:
+    nlist: 100
+    fuzziness: 2.0
+    nprobe: 10
