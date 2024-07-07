@@ -127,6 +127,12 @@ int main()
   {
     th.join();
   }
+
+  throughput = 0;
+  for (int i = 0; i < num_threads; i++)
+  {
+    throughput += IndexResults[i].queries_count;
+  }
   std::cout << "[IVF_FC]Throughput: " << throughput / ex_time << " [qps]" << std::endl;
   std::cout << "[IVF_FC]Recall: " << calculateRecall(dataset) << std::endl;
 }
