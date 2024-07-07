@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dataset.hh"
+#include "../index/flat.hh"
 #include <vector>
 
 class Result
@@ -11,3 +12,5 @@ public:
 };
 
 extern std::vector<Result> IndexResults;
+
+double calculateRecall(std::vector<Vector *> dataset);

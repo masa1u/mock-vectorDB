@@ -76,6 +76,15 @@ int main()
     th.join();
   }
 
+  // 結果の出力
+  int throughput = 0;
+  for (int i = 0; i < num_threads; i++)
+  {
+    throughput += IndexResults[i].queries_count;
+  }
+  std::cout << "Throughput: " << throughput / ex_time << " [qps]" << std::endl;
+  std::cout << "recall: " << calculateRecall(dataset) << std::endl;
+
   // // FlatIndexの構築と検索
   // FlatIndex flat_index;
   // flat_index.buildIndex(dataset);
