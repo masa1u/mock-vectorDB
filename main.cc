@@ -10,10 +10,11 @@
 #include <atomic>
 #include <thread>
 
-int main()
+int main(int argc, char *argv[])
 {
   // YAMLファイルの読み込み
-  YAML::Node config = YAML::LoadFile("../conf/sample.yaml");
+  std::string filename = argv[1];
+  YAML::Node config = YAML::LoadFile(filename);
 
   // 設定値の取得
   int ex_time = config["config"]["ex_time"].as<int>();
