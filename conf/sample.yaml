@@ -1,4 +1,5 @@
 config:
+  ex_time: 3 # seconds
   dimension: 100
   num_vectors: 1000
   top_k: 10

@@ -2,6 +2,7 @@
 add_library(common
     dataset.cc
     similarity_function.cc
+    result.cc
 )
 
 # インクルードディレクトリの設定
