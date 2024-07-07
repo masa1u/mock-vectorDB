@@ -1,5 +1,33 @@
 #include "ivf_fc_flat.hh"
 
+void ivf_fc_flat_worker(
+    int thread_id,
+    int &ready,
+    const bool &start,
+    const bool &quit,
+    FuzzyCMeansIndex *index,
+    int dimension,
+    int top_k,
+    int nprobe)
+{
+  Result &myres = std::ref(IndexResults[thread_id]);
+
+  __atomic_store_n(&ready, 1, __ATOMIC_SEQ_CST);
+  while (!__atomic_load_n(&start, __ATOMIC_SEQ_CST))
+  {
+  }
+
+  while (!__atomic_load_n(&quit, __ATOMIC_SEQ_CST))
+  {
+    Vector *query_vector = createRandomVector(dimension);
+
+    std::vector<int> result = index->search(*query_vector, top_k, nprobe);
+
+    myres.search_results.emplace_back(*query_vector, result);
+    myres.queries_count++;
+  }
+}
+
 FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness)
     : num_clusters(num_clusters), dimension(dimension), fuzziness(fuzziness) {}
 

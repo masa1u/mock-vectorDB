@@ -36,7 +36,7 @@ int main()
   bool start = false;
   bool quit = false;
   std::vector<int> readys(num_threads, 0);
-  std::vector<std::thread> thv;
+  std::vector<std::thread> ivf_flat_thv;
 
   IndexResults.resize(num_threads);
 
@@ -46,7 +46,7 @@ int main()
 
   for (size_t i = 0; i < num_threads; ++i)
   {
-    thv.emplace_back(ivf_flat_worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), &ivf_index, dimension, top_k, ivf_flat_nprobe);
+    ivf_flat_thv.emplace_back(ivf_flat_worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), &ivf_index, dimension, top_k, ivf_flat_nprobe);
   }
 
   while (true)
@@ -71,7 +71,7 @@ int main()
 
   __atomic_store_n(&quit, true, __ATOMIC_SEQ_CST);
 
-  for (auto &th : thv)
+  for (auto &th : ivf_flat_thv)
   {
     th.join();
   }
@@ -82,28 +82,51 @@ int main()
   {
     throughput += IndexResults[i].queries_count;
   }
-  std::cout << "Throughput: " << throughput / ex_time << " [qps]" << std::endl;
-  std::cout << "recall: " << calculateRecall(dataset) << std::endl;
+  std::cout << "[IVF_FLAT]Throughput: " << throughput / ex_time << " [qps]" << std::endl;
+  std::cout << "[IVF_FLAT]Recall: " << calculateRecall(dataset) << std::endl;
 
-  // // FlatIndexの構築と検索
-  // FlatIndex flat_index;
-  // flat_index.buildIndex(dataset);
-  // std::vector<int> flat_result = flat_index.search(query_vector->features, top_k);
+  std::vector<std::thread> ivf_fc_thv;
+  start = false;
+  quit = false;
+  readys = std::vector<int>(num_threads, 0);
+  IndexResults.clear();
+  IndexResults.resize(num_threads);
 
-  // // 結果の出力
-  // for (int i = 0; i < top_k; i++)
-  // {
-  //   std::cout << "flat" << i + 1 << ": " << flat_result[i] << std::endl;
-  // }
+  // FuzzyCMeansIndexの構築と検索
+  FuzzyCMeansIndex ivf_fc_index(ivf_fc_nlist, dimension, fuzzy_c_means_weight);
+  ivf_fc_index.buildIndex(dataset);
 
-  // // FuzzyCMeansIndexの構築と検索
-  // FuzzyCMeansIndex ivf_fc_index(ivf_fc_nlist, dimension, fuzzy_c_means_weight);
-  // ivf_fc_index.buildIndex(dataset);
-  // std::vector<int> ivf_fc_result = ivf_fc_index.search(query_vector->features, top_k, ivf_fc_nprobe);
+  for (size_t i = 0; i < num_threads; ++i)
+  {
+    ivf_fc_thv.emplace_back(ivf_fc_flat_worker, i, std::ref(readys[i]), std::ref(start), std::ref(quit), &ivf_fc_index, dimension, top_k, ivf_fc_nprobe);
+  }
 
-  // // 結果の出力
-  // for (int i = 0; i < top_k; i++)
-  // {
-  //   std::cout << "ivf_fc_flat" << i + 1 << ": " << ivf_fc_result[i] << std::endl;
-  // }
+  while (true)
+  {
+    bool failed = false;
+    for (auto &re : readys)
+    {
+      if (!__atomic_load_n(&re, __ATOMIC_SEQ_CST))
+      {
+        failed = true;
+        break;
+      }
+    }
+    if (!failed)
+    {
+      break;
+    }
+  }
+
+  __atomic_store_n(&start, true, __ATOMIC_SEQ_CST);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000 * ex_time));
+
+  __atomic_store_n(&quit, true, __ATOMIC_SEQ_CST);
+
+  for (auto &th : ivf_fc_thv)
+  {
+    th.join();
+  }
+  std::cout << "[IVF_FC]Throughput: " << throughput / ex_time << " [qps]" << std::endl;
+  std::cout << "[IVF_FC]Recall: " << calculateRecall(dataset) << std::endl;
 }

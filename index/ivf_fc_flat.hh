@@ -8,6 +8,7 @@
 
 #include "../common/dataset.hh"
 #include "../common/similarity_function.hh"
+#include "../common/result.hh"
 
 class FuzzyCMeansIndex
 {
@@ -28,3 +29,5 @@ private:
   void calculateMembership(const std::vector<Vector *> &data);
   int nthClosestCentroid(const Vector &point, int n);
 };
+
+void ivf_fc_flat_worker(int thread_id, int &ready, const bool &start, const bool &quit, FuzzyCMeansIndex *index, int dimension, int top_k, int nprobe);
