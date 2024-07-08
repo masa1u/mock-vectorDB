@@ -3,5 +3,6 @@ mkdir build
 cd build
 cmake ..
 make
-./main
+cd ..
+bash experiment.sh
 ```
