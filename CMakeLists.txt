@@ -16,6 +16,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(YAML_CPP REQUIRED yaml-cpp)
 
+# pthreadの設定
+find_package(Threads REQUIRED)
+
 # インクルードディレクトリとリンクディレクトリの設定
 include_directories(${YAML_CPP_INCLUDE_DIRS})
 link_directories("/usr/local/Cellar/yaml-cpp/0.8.0/lib")
@@ -31,5 +34,6 @@ add_subdirectory(index)
 target_link_libraries(main PUBLIC common)
 target_link_libraries(main PUBLIC index)
 
-# yaml-cppライブラリのリンク
+# yaml-cppとpthreadライブラリのリンク
 target_link_libraries(main PRIVATE yaml-cpp)
+target_link_libraries(main PRIVATE Threads::Threads)
