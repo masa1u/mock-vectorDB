@@ -13,8 +13,8 @@
 int main(int argc, char *argv[])
 {
   // YAMLファイルの読み込み
-  std::string filename = argv[1];
-  YAML::Node config = YAML::LoadFile(filename);
+  std::string input_filename = argv[1];
+  YAML::Node config = YAML::LoadFile(input_filename);
 
   // 設定値の取得
   int ex_time = config["config"]["ex_time"].as<int>();

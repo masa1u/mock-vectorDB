@@ -3,6 +3,7 @@
 #include "dataset.hh"
 #include "../index/flat.hh"
 #include <vector>
+#include <utility>
 
 class Result
 {
@@ -14,3 +15,4 @@ public:
 extern std::vector<Result> IndexResults;
 
 double calculateRecall(std::vector<Vector *> dataset);
+std::pair<int, int> calculateRelevantAndRetrieved(std::vector<Vector *> dataset);
