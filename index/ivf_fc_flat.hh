@@ -16,6 +16,9 @@ public:
   FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness);
   void buildIndex(const std::vector<Vector *> &data);
   std::vector<int> search(const Vector &query, int top_k, int n_probe);
+  void printClusters() const;   // debug
+  void printMembership() const; // debug
+  void printCentroids() const;  // debug
 
 private:
   int num_clusters;

@@ -78,6 +78,7 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
       for (int j = 0; j < num_clusters; ++j)
       {
         if (fabs(membership[i][j] - old_membership[i][j]) > 1e-4)
+        // if (membership[i][j] != old_membership[i][j])
         {
           changed = true;
           break;
@@ -162,15 +163,18 @@ void FuzzyCMeansIndex::calculateMembership(const std::vector<Vector *> &data)
     double sum = 0.0;
     for (int j = 0; j < num_clusters; ++j)
     {
-      double distance = similarity_function(data[i]->features, centroids[j].features);
-      membership[i][j] = pow(1.0 / distance, 2.0 / (fuzziness - 1.0));
-      sum += membership[i][j];
+      for (int k = 0; k < num_clusters; ++k)
+      {
+        sum += pow(similarity_function(data[i]->features, centroids[j].features) / similarity_function(data[i]->features, centroids[k].features), 2.0 / (fuzziness - 1.0));
+      }
+      membership[i][j] = 1 / sum;
+      // sum += membership[i][j];
     }
-    // 正規化
-    for (int j = 0; j < num_clusters; ++j)
-    {
-      membership[i][j] /= sum;
-    }
+    // // 正規化
+    // for (int j = 0; j < num_clusters; ++j)
+    // {
+    //   membership[i][j] /= sum;
+    // }
   }
 }
 
@@ -190,4 +194,44 @@ int FuzzyCMeansIndex::nthClosestCentroid(const Vector &point, int n)
 
   // 0-indexedなので、n-1番目の要素を返す
   return distances[n - 1].second;
+}
+
+void FuzzyCMeansIndex::printClusters() const
+{
+  for (int i = 0; i < num_clusters; ++i)
+  {
+    std::cout << "[IVF-FC]Cluster " << i << ":\n";
+    for (const auto &vector : clusters[i])
+    {
+      // ベクトルの特徴ではなく、ベクトルのIDを出力
+      std::cout << "Vector ID: " << vector.id << "\n";
+    }
+    std::cout << "\n";
+  }
+}
+
+void FuzzyCMeansIndex::printMembership() const
+{
+  for (int i = 0; i < membership.size(); ++i)
+  {
+    std::cout << "[IVF-FC]Vector " << i << ":\n";
+    for (int j = 0; j < num_clusters; ++j)
+    {
+      std::cout << "Cluster " << j << ": " << membership[i][j] << "\n";
+    }
+    std::cout << "\n";
+  }
+}
+
+void FuzzyCMeansIndex::printCentroids() const
+{
+  for (int i = 0; i < num_clusters; ++i)
+  {
+    std::cout << "[IVF-FC]Centroid " << i << ":\n";
+    for (int j = 0; j < dimension; ++j)
+    {
+      std::cout << centroids[i].features[j] << " ";
+    }
+    std::cout << "\n";
+  }
 }

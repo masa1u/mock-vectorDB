@@ -18,6 +18,7 @@ public:
   IVFFlatIndex(int num_clusters, int dimension);
   void buildIndex(const std::vector<Vector *> data);
   std::vector<int> search(const Vector &query, int top_k, int n_probe);
+  void printClusters() const;
 
 private:
   int num_clusters;

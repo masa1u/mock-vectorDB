@@ -144,3 +144,17 @@ std::vector<int> IVFFlatIndex::search(const Vector &query, int top_k, int n_prob
   }
   return result;
 }
+
+void IVFFlatIndex::printClusters() const
+{
+  for (int i = 0; i < num_clusters; ++i)
+  {
+    std::cout << "[IVF-FLAT]Cluster " << i << ":\n";
+    for (const auto &vector : clusters[i])
+    {
+      // ベクトルの特徴ではなく、ベクトルのIDを出力
+      std::cout << "Vector ID: " << vector.id << "\n";
+    }
+    std::cout << "\n";
+  }
+}
