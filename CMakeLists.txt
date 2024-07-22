@@ -24,16 +24,21 @@ include_directories(${YAML_CPP_INCLUDE_DIRS})
 link_directories("/usr/local/Cellar/yaml-cpp/0.8.0/lib")
 
 # 実行ファイルのビルド
-add_executable(main main.cc)
+add_executable(ivf_fc_flat ivf_fc_flat.cc)
+add_executable(ivf_flat ivf_flat.cc)
 
 # サブディレクトリの追加
 add_subdirectory(common)
 add_subdirectory(index)
 
 # main と common ライブラリのリンク
-target_link_libraries(main PUBLIC common)
-target_link_libraries(main PUBLIC index)
+target_link_libraries(ivf_fc_flat PUBLIC common)
+target_link_libraries(ivf_fc_flat PUBLIC index)
+target_link_libraries(ivf_flat PUBLIC common)
+target_link_libraries(ivf_flat PUBLIC index)
 
 # yaml-cppとpthreadライブラリのリンク
-target_link_libraries(main PRIVATE yaml-cpp)
-target_link_libraries(main PRIVATE Threads::Threads)
+target_link_libraries(ivf_fc_flat PRIVATE yaml-cpp)
+target_link_libraries(ivf_fc_flat PRIVATE Threads::Threads)
+target_link_libraries(ivf_flat PRIVATE yaml-cpp)
+target_link_libraries(ivf_flat PRIVATE Threads::Threads)
