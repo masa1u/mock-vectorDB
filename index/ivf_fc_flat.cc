@@ -28,8 +28,8 @@ void ivf_fc_flat_worker(
   }
 }
 
-FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness)
-    : num_clusters(num_clusters), dimension(dimension), fuzziness(fuzziness) {}
+FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness, double threshold)
+    : num_clusters(num_clusters), dimension(dimension), fuzziness(fuzziness), threshold(threshold) {}
 
 void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
 {
@@ -37,27 +37,28 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
   centroids.resize(num_clusters);
   membership.resize(data.size(), std::vector<double>(num_clusters, 0.0));
 
-  // 初期クラスタ中心をランダムに選択
   std::random_device rd;
   std::mt19937 gen(rd());
+  std::gamma_distribution<> gamma(1.0); // ディリクレ分布のパラメータα=1.0でガンマ分布を使用
 
   for (int i = 0; i < num_clusters; ++i)
   {
     centroids[i] = *data[std::uniform_int_distribution<>(0, data.size() - 1)(gen)];
   }
 
-  // membershipを乱数で初期化し、合計が1になるように正規化
+  // membershipをディリクレ分布で初期化し、合計が1になるように正規化
   for (auto &member : membership)
   {
     double sum = 0.0;
-    for (double &value : member)
+    std::vector<double> samples(num_clusters);
+    for (double &sample : samples)
     {
-      value = std::uniform_real_distribution<>(0.0, 1.0)(gen);
-      sum += value;
+      sample = gamma(gen); // ガンマ分布からサンプルを抽出
+      sum += sample;
     }
-    for (double &value : member)
+    for (int i = 0; i < num_clusters; ++i)
     {
-      value /= sum; // 合計が1になるように正規化
+      member[i] = samples[i] / sum; // 合計が1になるように正規化
     }
   }
 
@@ -89,13 +90,13 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
     }
   } while (changed);
 
-  // 所属度が0より大きいクラスタにベクトルを格納
+  // 所属度が閾値より大きいクラスタにベクトルを格納
   clusters.resize(num_clusters);
   for (int i = 0; i < data.size(); ++i)
   {
     for (int j = 0; j < num_clusters; ++j)
     {
-      if (membership[i][j] > 0)
+      if (membership[i][j] > threshold)
       {
         clusters[j].push_back(*data[i]);
       }
@@ -160,9 +161,10 @@ void FuzzyCMeansIndex::calculateMembership(const std::vector<Vector *> &data)
 {
   for (int i = 0; i < data.size(); ++i)
   {
-    double sum = 0.0;
+    // double sum = 0.0;
     for (int j = 0; j < num_clusters; ++j)
     {
+      double sum = 0.0;
       for (int k = 0; k < num_clusters; ++k)
       {
         sum += pow(similarity_function(data[i]->features, centroids[j].features) / similarity_function(data[i]->features, centroids[k].features), 2.0 / (fuzziness - 1.0));

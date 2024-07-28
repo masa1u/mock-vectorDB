@@ -13,7 +13,7 @@
 class FuzzyCMeansIndex
 {
 public:
-  FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness);
+  FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness, double threshold);
   void buildIndex(const std::vector<Vector *> &data);
   std::vector<int> search(const Vector &query, int top_k, int n_probe);
   void printClusters() const;   // debug
@@ -24,6 +24,7 @@ private:
   int num_clusters;
   int dimension;
   double fuzziness; // ファジィ度
+  double threshold; // クラスタ所属判定の閾値
   std::vector<Vector> centroids;
   std::vector<std::vector<double>> membership; // 各ベクトルのクラスタへの所属度
   std::vector<std::vector<Vector>> clusters;
