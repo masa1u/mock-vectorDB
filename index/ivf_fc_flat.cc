@@ -33,6 +33,16 @@ FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzzi
 
 void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
 {
+  // const std::string index_filename = "index.dat";
+
+  // // 既存のインデックスが存在する場合は読み込み
+  // std::ifstream ifs(index_filename, std::ios::binary);
+  // if (ifs)
+  // {
+  //   loadIndex(index_filename);
+  //   return;
+  // }
+
   // 初期化
   centroids.resize(num_clusters);
   membership.resize(data.size(), std::vector<double>(num_clusters, 0.0));
@@ -102,6 +112,77 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
       }
     }
   }
+
+  // saveIndex(index_filename);
+}
+
+void FuzzyCMeansIndex::saveIndex(const std::string &filename) const
+{
+  std::ofstream ofs(filename, std::ios::binary);
+  if (!ofs)
+  {
+    std::cerr << "Error opening file for writing: " << filename << std::endl;
+    return;
+  }
+
+  // クラスタ数と次元数を書き出し
+  ofs.write(reinterpret_cast<const char *>(&num_clusters), sizeof(num_clusters));
+  ofs.write(reinterpret_cast<const char *>(&dimension), sizeof(dimension));
+
+  // centroidsを書き出し
+  for (const auto &centroid : centroids)
+  {
+    ofs.write(reinterpret_cast<const char *>(centroid.features.data()), centroid.features.size() * sizeof(double));
+  }
+
+  // 各ベクトルの所属情報を書き出し
+  for (const auto &cluster : clusters)
+  {
+    int cluster_size = cluster.size();
+    ofs.write(reinterpret_cast<const char *>(&cluster_size), sizeof(cluster_size));
+    for (const auto &vector : cluster)
+    {
+      ofs.write(reinterpret_cast<const char *>(&vector.id), sizeof(vector.id));
+    }
+  }
+
+  ofs.close();
+}
+
+void FuzzyCMeansIndex::loadIndex(const std::string &filename)
+{
+  std::ifstream ifs(filename, std::ios::binary);
+  if (!ifs)
+  {
+    std::cerr << "Error opening file for reading: " << filename << std::endl;
+    return;
+  }
+
+  // クラスタ数と次元数を読み込み
+  ifs.read(reinterpret_cast<char *>(&num_clusters), sizeof(num_clusters));
+  ifs.read(reinterpret_cast<char *>(&dimension), sizeof(dimension));
+
+  // centroidsを読み込み
+  centroids.resize(num_clusters, Vector(std::vector<double>(dimension)));
+  for (auto &centroid : centroids)
+  {
+    ifs.read(reinterpret_cast<char *>(centroid.features.data()), centroid.features.size() * sizeof(double));
+  }
+
+  // 各ベクトルの所属情報を読み込み
+  clusters.resize(num_clusters);
+  for (auto &cluster : clusters)
+  {
+    int cluster_size;
+    ifs.read(reinterpret_cast<char *>(&cluster_size), sizeof(cluster_size));
+    cluster.resize(cluster_size);
+    for (auto &vector : cluster)
+    {
+      ifs.read(reinterpret_cast<char *>(&vector.id), sizeof(vector.id));
+    }
+  }
+
+  ifs.close();
 }
 
 std::vector<int> FuzzyCMeansIndex::search(const Vector &query, int top_k, int n_probe)

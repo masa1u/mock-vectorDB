@@ -5,6 +5,8 @@
 #include <limits>
 #include <algorithm>
 #include <set>
+#include <fstream>
+#include <iostream>
 
 #include "../common/dataset.hh"
 #include "../common/similarity_function.hh"
@@ -16,6 +18,8 @@ public:
   FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness, double threshold);
   void buildIndex(const std::vector<Vector *> &data);
   std::vector<int> search(const Vector &query, int top_k, int n_probe);
+  void saveIndex(const std::string &filename) const;
+  void loadIndex(const std::string &filename);
   void printClusters() const;   // debug
   void printMembership() const; // debug
   void printCentroids() const;  // debug
