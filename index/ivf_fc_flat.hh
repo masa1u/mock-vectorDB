@@ -7,6 +7,7 @@
 #include <set>
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 #include "../common/dataset.hh"
 #include "../common/similarity_function.hh"
@@ -36,6 +37,7 @@ private:
   void calculateCentroids(const std::vector<Vector *> &data);
   void calculateMembership(const std::vector<Vector *> &data);
   int nthClosestCentroid(const Vector &point, int n);
+  void calculateMembershipForDataPoint(const std::vector<Vector *> &data, int i);
 };
 
 void ivf_fc_flat_worker(int thread_id, int &ready, const bool &start, const bool &quit, FuzzyCMeansIndex *index, int dimension, int top_k, int nprobe);

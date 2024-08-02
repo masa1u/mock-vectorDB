@@ -77,11 +77,9 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
   {
     // クラスタ中心の計算
     calculateCentroids(data);
-
     // 所属度の計算
     std::vector<std::vector<double>> old_membership = membership;
     calculateMembership(data);
-
     // 所属度の変化をチェック
     changed = false;
     for (int i = 0; i < data.size(); ++i)
@@ -238,26 +236,50 @@ void FuzzyCMeansIndex::calculateCentroids(const std::vector<Vector *> &data)
   }
 }
 
+// void FuzzyCMeansIndex::calculateMembership(const std::vector<Vector *> &data)
+// {
+//   for (int i = 0; i < data.size(); ++i)
+//   {
+//     for (int j = 0; j < num_clusters; ++j)
+//     {
+//       double sum = 0.0;
+//       for (int k = 0; k < num_clusters; ++k)
+//       {
+//         sum += pow(similarity_function(data[i]->features, centroids[j].features) / similarity_function(data[i]->features, centroids[k].features), 2.0 / (fuzziness - 1.0));
+//       }
+//       membership[i][j] = 1 / sum;
+//     }
+//   }
+// }
+
+void FuzzyCMeansIndex::calculateMembershipForDataPoint(const std::vector<Vector *> &data, int i)
+{
+  for (int j = 0; j < num_clusters; ++j)
+  {
+    double sum = 0.0;
+    for (int k = 0; k < num_clusters; ++k)
+    {
+      double numerator = similarity_function(data[i]->features, centroids[j].features);
+      double denominator = similarity_function(data[i]->features, centroids[k].features);
+      sum += pow(numerator / denominator, 2.0 / (fuzziness - 1.0));
+    }
+    membership[i][j] = 1 / sum;
+  }
+}
+
 void FuzzyCMeansIndex::calculateMembership(const std::vector<Vector *> &data)
 {
-  for (int i = 0; i < data.size(); ++i)
+  int dataSize = data.size();
+  std::vector<std::thread> threads;
+
+  for (int i = 0; i < dataSize; ++i)
   {
-    // double sum = 0.0;
-    for (int j = 0; j < num_clusters; ++j)
-    {
-      double sum = 0.0;
-      for (int k = 0; k < num_clusters; ++k)
-      {
-        sum += pow(similarity_function(data[i]->features, centroids[j].features) / similarity_function(data[i]->features, centroids[k].features), 2.0 / (fuzziness - 1.0));
-      }
-      membership[i][j] = 1 / sum;
-      // sum += membership[i][j];
-    }
-    // // 正規化
-    // for (int j = 0; j < num_clusters; ++j)
-    // {
-    //   membership[i][j] /= sum;
-    // }
+    threads.emplace_back(&FuzzyCMeansIndex::calculateMembershipForDataPoint, this, std::cref(data), i);
+  }
+
+  for (auto &thread : threads)
+  {
+    thread.join();
   }
 }
 
