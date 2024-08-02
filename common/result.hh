@@ -4,6 +4,7 @@
 #include "../index/flat.hh"
 #include <vector>
 #include <utility>
+#include <thread>
 
 class Result
 {
