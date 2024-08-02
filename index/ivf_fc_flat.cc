@@ -28,10 +28,10 @@ void ivf_fc_flat_worker(
   }
 }
 
-FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness, double threshold)
-    : num_clusters(num_clusters), dimension(dimension), fuzziness(fuzziness), threshold(threshold) {}
+FuzzyCMeansIndex::FuzzyCMeansIndex(int num_clusters, int dimension, double fuzziness)
+    : num_clusters(num_clusters), dimension(dimension), fuzziness(fuzziness) {}
 
-void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
+void FuzzyCMeansIndex::clustering(const std::vector<Vector *> &data)
 {
   // const std::string index_filename = "index.dat";
 
@@ -98,6 +98,11 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
     }
   } while (changed);
 
+  // saveIndex(index_filename);
+}
+
+void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data, double threshold)
+{
   // 所属度が閾値より大きいクラスタにベクトルを格納
   clusters.resize(num_clusters);
   for (int i = 0; i < data.size(); ++i)
@@ -110,8 +115,6 @@ void FuzzyCMeansIndex::buildIndex(const std::vector<Vector *> &data)
       }
     }
   }
-
-  // saveIndex(index_filename);
 }
 
 void FuzzyCMeansIndex::saveIndex(const std::string &filename) const
@@ -186,15 +189,17 @@ void FuzzyCMeansIndex::loadIndex(const std::string &filename)
 std::vector<int> FuzzyCMeansIndex::search(const Vector &query, int top_k, int n_probe)
 {
   std::vector<std::pair<int, double>> distances;
-  for (int i = 0; i < n_probe; ++i)
-  {
-    int cluster_id = nthClosestCentroid(query, i + 1);
 
+  int current_cluster = 1;
+  while (current_cluster <= n_probe or distances.size() < top_k)
+  {
+    int cluster_id = nthClosestCentroid(query, current_cluster);
     for (int j = 0; j < clusters[cluster_id].size(); ++j)
     {
       double dist = similarity_function(query.features, clusters[cluster_id][j].features);
       distances.emplace_back(clusters[cluster_id][j].id, dist);
     }
+    current_cluster++;
   }
 
   std::sort(distances.begin(), distances.end(), [](const std::pair<int, double> &a, const std::pair<int, double> &b)
@@ -299,6 +304,14 @@ int FuzzyCMeansIndex::nthClosestCentroid(const Vector &point, int n)
 
   // 0-indexedなので、n-1番目の要素を返す
   return distances[n - 1].second;
+}
+
+void FuzzyCMeansIndex::clearClusters()
+{
+  for (int i = 0; i < num_clusters; ++i)
+  {
+    clusters[i].clear();
+  }
 }
 
 void FuzzyCMeansIndex::printClusters() const
