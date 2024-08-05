@@ -122,16 +122,16 @@ int IVFFlatIndex::nthClosestCentroid(const Vector &point, int n)
 std::vector<int> IVFFlatIndex::search(const Vector &query, int top_k, int n_probe)
 {
   std::vector<std::pair<int, double>> distances;
-  for (int i = 0; i < n_probe; ++i)
+  int current_cluster = 1;
+  while (current_cluster <= n_probe or distances.size() < top_k)
   {
-    int cluster_id = nthClosestCentroid(query, i + 1);
-
-    // クラスタ内の全データポイントに対して距離を計算
+    int cluster_id = nthClosestCentroid(query, current_cluster);
     for (int j = 0; j < clusters[cluster_id].size(); ++j)
     {
       double dist = similarity_function(query.features, clusters[cluster_id][j].features);
       distances.emplace_back(clusters[cluster_id][j].id, dist);
     }
+    current_cluster++;
   }
 
   // 距離でソートして上位top_kを返す
