@@ -9,6 +9,7 @@
 #include <yaml-cpp/yaml.h>
 #include <atomic>
 #include <thread>
+#include <fstream>
 
 int main(int argc, char *argv[])
 {
@@ -87,8 +88,13 @@ int main(int argc, char *argv[])
         throughput += IndexResults[i].queries_count;
       }
       std::pair<int, int> result = calculateRelevantAndRetrieved(dataset);
-      std::cout << "[IVF_FC]Throughput: " << throughput / ex_time << " [qps]" << result.second / ex_time << std::endl;
-      std::cout << "[IVF_FC]Recall: " << double(result.first) / result.second << std::endl;
+      std::cout << "[IVF_FLAT]Throughput: " << throughput / ex_time << " [qps]" << result.second / ex_time << std::endl;
+      std::cout << "[IVF_FLAT]Recall: " << double(result.first) / result.second << std::endl;
+
+      // CSVファイルへの書き込み
+      std::ofstream csv_file(argv[2], std::ios::app);
+      csv_file << ex_time << "," << _ << "," << dimension << "," << num_vectors << "," << top_k << "," << num_threads << "," << ivf_flat_nlist << "," << ivf_flat_nprobe << ",,,,," << throughput / ex_time << "," << result.first << "," << result.second << "\n";
+      csv_file.close();
 
       IndexResults.clear();
     }

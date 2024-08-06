@@ -7,16 +7,15 @@ config:
   num_threads: 4
   ivf_flat:
     nlist: 10
-    nprobe: 1
     upper_nprobe: 1
     lower_nprobe: 1
     step_nprobe: 1
   ivf_fc_flat:
     nlist: 10
     fuzziness: 1.03
-    upper_nprobe: 3
+    upper_nprobe: 1
     lower_nprobe: 1
     step_nprobe: 1
-    upper_threshold: 0.6
+    upper_threshold: 0.4
     lower_threshold: 0.4
     step_threshold: 0.1

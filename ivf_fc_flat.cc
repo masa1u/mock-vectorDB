@@ -9,6 +9,7 @@
 #include <yaml-cpp/yaml.h>
 #include <atomic>
 #include <thread>
+#include <fstream>
 
 int main(int argc, char *argv[])
 {
@@ -24,10 +25,10 @@ int main(int argc, char *argv[])
   int top_k = config["config"]["top_k"].as<int>();
   int num_threads = config["config"]["num_threads"].as<int>();
   int ivf_fc_nlist = config["config"]["ivf_fc_flat"]["nlist"].as<int>();
+  double fuzzy_c_means_weight = config["config"]["ivf_fc_flat"]["fuzziness"].as<double>();
   int upper_nprobe = config["config"]["ivf_fc_flat"]["upper_nprobe"].as<int>();
   int lower_nprobe = config["config"]["ivf_fc_flat"]["lower_nprobe"].as<int>();
   int step_nprobe = config["config"]["ivf_fc_flat"]["step_nprobe"].as<int>();
-  double fuzzy_c_means_weight = config["config"]["ivf_fc_flat"]["fuzziness"].as<double>();
   double upper_threshold = config["config"]["ivf_fc_flat"]["upper_threshold"].as<double>();
   double lower_threshold = config["config"]["ivf_fc_flat"]["lower_threshold"].as<double>();
   double step_threshold = config["config"]["ivf_fc_flat"]["step_threshold"].as<double>();
@@ -93,6 +94,12 @@ int main(int argc, char *argv[])
         std::cout << "threshold: " << threshold << " nprobe: " << ivf_fc_nprobe << std::endl;
         std::cout << "[IVF_FC]Throughput: " << throughput / ex_time << " [qps]" << result.second / ex_time << std::endl;
         std::cout << "[IVF_FC]Recall: " << double(result.first) / result.second << std::endl;
+
+        // CSVファイルへの書き込み
+        std::ofstream csv_file(argv[2], std::ios::app);
+        csv_file << ex_time << "," << _ << "," << dimension << "," << num_vectors << "," << top_k << "," << num_threads << ",,," << ivf_fc_nlist << "," << fuzzy_c_means_weight << "," << ivf_fc_nprobe << "," << threshold << "," << throughput / ex_time << "," << result.first << "," << result.second << "\n";
+        csv_file.close();
+
         IndexResults.clear();
       }
     }
