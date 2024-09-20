@@ -32,7 +32,7 @@ private:
   int dimension;
   double fuzziness; // ファジィ度
   std::vector<Vector> centroids;
-  std::vector<std::vector<double>> membership; // 各ベクトルのクラスタへの所属度
+  std::vector<std::vector<float>> membership; // 各ベクトルのクラスタへの所属度
   std::vector<std::vector<Vector>> clusters;
 
   void calculateCentroids(const std::vector<Vector *> &data);

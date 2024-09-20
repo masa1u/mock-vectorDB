@@ -45,7 +45,7 @@ void FuzzyCMeansIndex::clustering(const std::vector<Vector *> &data)
 
   // 初期化
   centroids.resize(num_clusters);
-  membership.resize(data.size(), std::vector<double>(num_clusters, 0.0));
+  membership.resize(data.size(), std::vector<float>(num_clusters, 0.0));
 
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -78,7 +78,7 @@ void FuzzyCMeansIndex::clustering(const std::vector<Vector *> &data)
     // クラスタ中心の計算
     calculateCentroids(data);
     // 所属度の計算
-    std::vector<std::vector<double>> old_membership = membership;
+    std::vector<std::vector<float>> old_membership = membership;
     calculateMembership(data);
     // 所属度の変化をチェック
     changed = false;
